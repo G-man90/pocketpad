@@ -6,6 +6,7 @@ try {
   dotnet publish companion/PocketPad.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o release/windows
   if($LASTEXITCODE -ne 0){throw 'Companion build failed.'}
   Copy-Item README.md,THIRD-PARTY-NOTICES.md,RELEASE-NOTES.md -Destination release/windows
+  & "$PSScriptRoot/package-notices.ps1"
   Compress-Archive -Path release/windows/* -DestinationPath release/PocketPad-Windows-x64.zip -Force
   Write-Output 'Packaged release/PocketPad-Windows-x64.zip'
 } finally {Pop-Location}

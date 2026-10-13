@@ -11,6 +11,7 @@ Checked on 13 October 2026.
 - QR pairing dashboard renders a QR code. Opening its displayed address with the pairing key connects the controller web app through WebSocket and shows **Connected · Wi-Fi**.
 - Responsive inspection at desktop, 390 × 844 portrait, and 844 × 390 landscape sizes. Mobile layouts fit without horizontal overflow.
 - No browser console errors during controller and pairing checks.
+- Packaged self-contained executable launches successfully, and the XInput integration checks pass against it. Pairing-key requests with an untrusted Origin receive 403; untrusted Host headers receive 400.
 
 ## Device testing still required
 
