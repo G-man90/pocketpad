@@ -1,0 +1,112 @@
+.host-main {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding-top: 55px;
+}
+.host-main h1 {
+  font-size: 42px;
+  font-weight: 550;
+  letter-spacing: -1.5px;
+  margin: 16px 0;
+}
+.host-intro {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.host-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+.qr-card,
+.info-card {
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--panel);
+  padding: 28px;
+}
+.qr-card {
+  text-align: center;
+}
+.qr-card h2 {
+  font-weight: 550;
+  letter-spacing: -0.6px;
+}
+.qr-card p,
+.info-card p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a1b599;
+}
+.qr-card select {
+  margin-bottom: 15px;
+}
+.qr-card .button {
+  width: 100%;
+}
+#qr {
+  min-height: 230px;
+  display: grid;
+  place-items: center;
+}
+#qr svg {
+  width: 230px;
+  height: 230px;
+  background: #fff;
+  border-radius: 10px;
+}
+.small {
+  font-size: 10px !important;
+  color: #879a80 !important;
+}
+.host-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.info-card h2 {
+  font-size: 23px;
+  font-weight: 500;
+}
+.info-card h3 {
+  font-size: 17px;
+  font-weight: 500;
+}
+.info-card a {
+  text-decoration: underline;
+}
+.key-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.key-row code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  color: var(--lime);
+}
+.host-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 28px 0;
+}
+.info-card .field-label {
+  margin-top: 22px;
+}
+@media (max-width: 700px) {
+  .host-grid {
+    grid-template-columns: 1fr;
+  }
+  .host-main h1 {
+    font-size: 32px;
+  }
+  .host-main {
+    padding-top: 30px;
+  }
+  .topbar > .eyebrow {
+    display: none;
+  }
+}

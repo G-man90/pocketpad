@@ -1,0 +1,11 @@
+node_modules/
+dist/
+companion/bin/
+companion/obj/
+release/
+*.tar.gz
+.DS_Store
+.openai/
+.local/
+**/bin/
+**/obj/

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#111713" />
+    <meta
+      name="description"
+      content="Turn your phone into a customizable Windows game controller. Xbox and PlayStation layouts, Wi-Fi pairing, and Bluetooth on supported devices."
+    />
+    <title>PocketPad — Your next controller is already in your pocket.</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="PocketPad home"
+        ><span class="brand-icon">✣</span> PocketPad<span class="badge"
+          >BETA</span
+        ></a
+      >
+      <nav class="mode-tabs" aria-label="Workspace">
+        <button id="playTab" class="active" aria-pressed="true">Play</button
+        ><button id="editTab" aria-pressed="false">Customize</button>
+      </nav>
+      <button id="connectTop" class="button lime">↗ Connect device</button>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <div class="eyebrow">
+            <span class="tiny-dot"></span> YOUR PHONE. YOUR GAME.
+          </div>
+          <h1>
+            Make yourself<br class="mobile-break" />
+            comfortable.
+          </h1>
+          <p>A familiar controller. A layout that’s entirely yours.</p>
+        </div>
+        <button class="text-button" id="helpButton">
+          How it works <span>↗</span>
+        </button>
+      </section>
+      <div class="workspace">
+        <aside class="sidebar left-sidebar">
+          <div class="section-label">01 / CONTROLLER</div>
+          <h2>Pick your pad.</h2>
+          <div id="padOptions" class="pad-options">
+            <button
+              class="pad-option active"
+              data-pad="xbox"
+              aria-pressed="true"
+            >
+              <span class="pad-symbol xbox-symbol">X</span
+              ><span
+                ><strong>Xbox</strong><small>Familiar. Versatile.</small></span
+              ><span class="radio-dot"></span>
+            </button>
+            <button class="pad-option" data-pad="ps4" aria-pressed="false">
+              <span class="pad-symbol">△</span
+              ><span
+                ><strong>PlayStation 4</strong
+                ><small>The classic layout.</small></span
+              ><span class="radio-dot"></span>
+            </button>
+            <button class="pad-option" data-pad="ps5" aria-pressed="false">
+              <span class="pad-symbol">◇</span
+              ><span
+                ><strong>PlayStation 5</strong
+                ><small>A modern favorite.</small></span
+              ><span class="radio-dot"></span>
+            </button>
+          </div>
+          <div class="divider"></div>
+          <div class="section-label">YOUR PRESETS</div>
+          <label class="field-label" for="profiles">Saved layouts</label
+          ><select id="profiles">
+            <option value="">Default layout</option>
+          </select>
+          <div class="two-buttons">
+            <button class="button subtle" id="saveProfile">Save layout</button
+            ><button
+              class="icon-button"
+              id="deleteProfile"
+              aria-label="Delete selected layout"
+            >
+              ⌫
+            </button>
+          </div>
+          <div class="saved-note">
+            <span>◈</span>
+            <p>Your layouts stay on this device.<br />No account needed.</p>
+          </div>
+        </aside>
+        <section class="controller-panel" aria-label="Controller workspace">
+          <div class="panel-top">
+            <span
+              ><span id="connectionDot" class="status-dot"></span
+              ><span id="connectionStatus">Preview mode</span></span
+            ><span class="panel-top-right"
+              ><span id="latency">NOT CONNECTED</span
+              ><button
+                id="fullscreen"
+                class="icon-button"
+                aria-label="Enter fullscreen"
+              >
+                ⛶
+              </button></span
+            >
+          </div>
+          <div class="stage" id="stage">
+            <div class="stage-grid"></div>
+            <div class="stage-caption">
+              <span id="padCaption">XBOX LAYOUT</span
+              ><span>POCKETPAD / 01</span>
+            </div>
+            <svg class="pad-outline" viewBox="0 0 900 460" aria-hidden="true">
+              <path
+                d="M191 67 C140 67 109 102 91 163 L47 323 C29 397 77 429 119 396 L225 309 Q252 290 281 292 L619 292 Q648 290 675 309 L781 396 C823 429 871 397 853 323 L809 163 C791 102 760 67 709 67 Z"
+              />
+            </svg>
+            <div class="center-mark" aria-hidden="true">
+              ✣<small>POCKETPAD</small>
+            </div>
+            <div id="controls"></div>
+            <div class="edit-tip" id="editTip" hidden>
+              Drag a control to move it. Select one to fine-tune.
+            </div>
+          </div>
+          <div class="panel-bottom">
+            <span id="stageHint"
+              >Try the controls · Connect to play on Windows</span
+            ><button id="resetLayout" class="text-button">
+              ↺ Reset layout
+            </button>
+          </div>
+          <div class="touch-tip">
+            ↻ Turn your phone sideways for more room to play.
+          </div>
+        </section>
+        <aside class="sidebar settings-sidebar">
+          <div class="section-label">02 / MAKE IT YOURS</div>
+          <h2 id="settingsHeading">Feels like you.</h2>
+          <div id="editorSettings" hidden>
+            <label class="field-label" for="selectedControl"
+              >Selected control</label
+            ><select id="selectedControl"></select
+            ><label class="range-label" for="controlSize"
+              >Size <output id="sizeValue">100%</output></label
+            ><input
+              id="controlSize"
+              type="range"
+              min="65"
+              max="155"
+              value="100"
+            /><label class="field-label" for="mapping">Button action</label
+            ><select id="mapping"></select>
+            <div class="divider"></div>
+          </div>
+          <label class="range-label" for="opacity"
+            >Button opacity <output id="opacityValue">100%</output></label
+          ><input
+            type="range"
+            id="opacity"
+            min="35"
+            max="100"
+            value="100"
+          /><label class="range-label" for="sensitivity"
+            >Stick sensitivity
+            <output id="sensitivityValue">1.0×</output></label
+          ><input
+            id="sensitivity"
+            type="range"
+            min="50"
+            max="180"
+            value="100"
+          /><label class="range-label" for="deadzone"
+            >Stick dead zone <output id="deadzoneValue">10%</output></label
+          ><input id="deadzone" type="range" min="0" max="35" value="10" />
+          <div class="divider"></div>
+          <label class="toggle-row" for="haptics"
+            ><span
+              ><strong>Haptic feedback</strong
+              ><small id="hapticSupport"
+                >A little feel for every tap.</small
+              ></span
+            ><input id="haptics" type="checkbox" role="switch" checked /></label
+          ><label class="range-label" for="vibration"
+            >Vibration duration
+            <output id="vibrationValue">20 ms</output></label
+          ><input
+            id="vibration"
+            type="range"
+            min="5"
+            max="70"
+            value="20"
+          /><button class="text-button" id="testVibration">
+            Test vibration ↗
+          </button>
+          <div class="settings-foot">
+            <span class="tiny-dot"></span> Designed for your thumbs.
+          </div>
+        </aside>
+      </div>
+      <section class="bottom-row">
+        <div class="connection-card">
+          <span class="connection-icon">⌁</span>
+          <div>
+            <h3 id="connectionTitle">Small screen. Big plays.</h3>
+            <p id="connectionDescription">
+              Connect to your Windows laptop and get in the game.
+            </p>
+          </div>
+          <button class="button subtle" id="connectBottom">
+            Let’s connect ↗
+          </button>
+        </div>
+        <div class="feature-note">
+          <span>◎</span>
+          <div>
+            <strong>Built around you.</strong>
+            <p>Move it. Resize it. Make it yours.</p>
+          </div>
+        </div>
+      </section>
+      <footer>
+        <span>POCKETPAD <span class="muted">/ PLAY YOUR WAY</span></span
+        ><span>Windows 10/11 <i>·</i> Android <i>·</i> iPhone & iPad</span
+        ><a
+          href="https://github.com/G-man90/pocketpad"
+          target="_blank"
+          rel="noreferrer"
+          >View source ↗</a
+        >
+      </footer>
+    </main>
+    <dialog id="connectDialog">
+      <div class="dialog-head">
+        <span class="eyebrow">LET’S GET YOU PLAYING</span
+        ><button
+          class="icon-button close-dialog"
+          aria-label="Close connection dialog"
+        >
+          ✕
+        </button>
+      </div>
+      <h2>Your pocket.<br />Your controller.</h2>
+      <p class="dialog-intro">
+        Start PocketPad on your Windows laptop, then choose how to connect.
+      </p>
+      <div class="connection-method">
+        <span class="method-icon">⌁</span>
+        <div>
+          <h3>Wi-Fi <span class="badge">ALL DEVICES</span></h3>
+          <p>
+            On the same Wi-Fi? Scan the QR code in the Windows companion. Your
+            controller opens and pairs automatically.
+          </p>
+          <a
+            class="button lime"
+            id="downloadCompanion"
+            href="https://github.com/G-man90/pocketpad/releases/download/v0.1.0-beta/PocketPad-Windows-x64.zip"
+            >Download Windows companion ↓</a
+          >
+          <details>
+            <summary>Already have a pairing link?</summary>
+            <label class="field-label" for="pairLink"
+              >Paste the link shown on your laptop</label
+            ><input
+              id="pairLink"
+              type="url"
+              placeholder="http://192.168.1.10:3210/#token=…"
+            /><button id="openPairLink" class="button subtle">
+              Open controller ↗
+            </button>
+          </details>
+        </div>
+      </div>
+      <div class="connection-method">
+        <span class="method-icon">ᛒ</span>
+        <div>
+          <h3>Bluetooth <span class="badge">COMPATIBLE ANDROID</span></h3>
+          <p id="bluetoothHelp">
+            Open this HTTPS page in Chrome on Android. Start the Windows
+            companion and copy its pairing key below.
+          </p>
+          <label class="field-label" for="bluetoothToken"
+            >Companion pairing key</label
+          ><input
+            id="bluetoothToken"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="32-character key from your laptop"
+          /><button id="bluetoothConnect" class="button subtle">
+            Connect with Bluetooth
+          </button>
+        </div>
+      </div>
+      <p class="dialog-note">
+        One Windows virtual-controller driver is required. PS4 and PS5 presets
+        change the touch layout; games receive Xbox-compatible input.
+        iPhone/iPad uses Wi-Fi, without browser vibration.
+      </p>
+      <p id="connectError" role="alert"></p>
+      <button class="text-button" id="disconnect">
+        Disconnect current device
+      </button>
+    </dialog>
+    <dialog id="profileDialog">
+      <div class="dialog-head">
+        <span class="eyebrow">KEEP YOUR SETUP</span
+        ><button
+          class="icon-button close-dialog"
+          aria-label="Close save layout dialog"
+        >
+          ✕
+        </button>
+      </div>
+      <h2>Save your layout.</h2>
+      <form id="profileForm">
+        <label for="profileName" class="field-label">Layout name</label
+        ><input
+          id="profileName"
+          maxlength="40"
+          required
+          placeholder="My racing setup"
+        /><button class="button lime" type="submit">Save layout</button>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

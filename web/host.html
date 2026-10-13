@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PocketPad — Windows companion</title>
+    <link rel="icon" href="icon.svg" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="host.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"
+        ><span class="brand-icon">✣</span> PocketPad<span class="badge"
+          >WINDOWS</span
+        ></a
+      ><span class="eyebrow">YOUR LAPTOP IS THE CONSOLE.</span>
+    </header>
+    <main class="host-main">
+      <div class="eyebrow">PAIR ONCE. PLAY YOUR WAY.</div>
+      <h1>Meet your new controller.</h1>
+      <p class="host-intro">
+        Keep this companion running. Connect your phone to the same Wi-Fi, then
+        scan the code.
+      </p>
+      <section class="host-grid">
+        <div class="qr-card">
+          <div id="qr" aria-label="Phone pairing QR code"></div>
+          <h2>Point. Scan. Play.</h2>
+          <p>Use your phone’s camera to open the controller.</p>
+          <label class="field-label" for="address">Laptop network address</label
+          ><select id="address"></select
+          ><button id="copyLink" class="button lime">
+            Copy pairing link ↗
+          </button>
+          <p class="small">
+            If the phone cannot connect, select your Wi-Fi address and allow
+            PocketPad on your Windows Private network. Guest Wi-Fi may block
+            connections.
+          </p>
+        </div>
+        <div class="host-details">
+          <div class="info-card">
+            <div class="section-label">CONNECTION STATUS</div>
+            <h2 id="hostStatus">Starting up…</h2>
+            <p id="driverStatus"></p>
+            <div class="divider"></div>
+            <span class="field-label">Bluetooth</span>
+            <p id="bleStatus"></p>
+            <span class="field-label">Pairing key</span>
+            <div class="key-row">
+              <code id="pairingKey"></code
+              ><button
+                id="copyKey"
+                class="icon-button"
+                aria-label="Copy pairing key"
+              >
+                ⧉
+              </button>
+            </div>
+            <p class="small">
+              For Bluetooth, open the live PocketPad website in Android Chrome
+              and enter this key. Your adapter must support Bluetooth LE
+              peripheral mode.
+            </p>
+            <a
+              href="https://g-man90.github.io/pocketpad/"
+              target="_blank"
+              rel="noreferrer"
+              class="text-button"
+              >Open live controller ↗</a
+            >
+          </div>
+          <div class="info-card">
+            <h3>Ready for your favorite game.</h3>
+            <p>
+              Windows receives an Xbox-compatible controller. You can still pick
+              Xbox, PS4, or PS5 layouts on your phone.
+            </p>
+            <p id="driverHelp" hidden>
+              The ViGEmBus driver is required. This legacy dependency is no
+              longer maintained. Install only from its
+              <a
+                href="https://github.com/nefarius/ViGEmBus/releases/tag/v1.22.0"
+                target="_blank"
+                rel="noreferrer"
+                >official release</a
+              >, then restart PocketPad.
+            </p>
+            <p class="small">
+              Pairing keys are renewed each time the companion starts. Keep the
+              key private. Close the companion to stop accepting connections.
+            </p>
+          </div>
+        </div>
+      </section>
+      <p class="host-footer">
+        No account. No cloud relay. Your inputs stay on your local connection.
+      </p>
+    </main>
+    <script src="vendor/qr.js"></script>
+    <script src="host.js"></script>
+  </body>
+</html>
