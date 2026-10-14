@@ -20,7 +20,7 @@ The connection picker labels Wi-Fi, Ethernet, Hotspot / Wi-Fi Direct, Bluetooth 
 
 ### Five letters, without a server
 
-Codes locate a laptop using a name such as `pocketpad-abcde.local` over multicast DNS. This needs a browser/OS with `.local` name resolution and a network that allows multicast and device-to-device traffic. It is not an internet directory and cannot bypass guest/client isolation. If discovery is blocked, scan the QR; if all local traffic is blocked, use a different network or offline Wi-Fi. The public site opens the local app in a new tab; return to the original tab for the fallback instructions if discovery fails.
+Codes locate a laptop using a name such as `pocketpad-abcde.local` over multicast DNS. This needs a browser/OS with `.local` name resolution and a network that allows multicast and device-to-device traffic. It is not an internet directory and cannot bypass guest/client isolation. If discovery is blocked, scan the QR; if all local traffic is blocked, use a different network or offline Wi-Fi. The public site opens the local app in the current tab, avoiding popup blockers. Use Back for the fallback instructions if discovery fails.
 
 Codes refresh every 15 minutes. The short code identifies the laptop; a local approval is required before issuing the full connection key. Requests expire in one minute and are rate limited. QR pairing already carries the full key and does not require approval. Local names are discoverable on the network, so only approve requests you initiated.
 

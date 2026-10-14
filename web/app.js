@@ -456,8 +456,8 @@ async function requestCodePair(value) {
       $("codeFallback").href = url;
       $("codeFallback").hidden = false;
       $("pairStatus").textContent =
-        "Your laptop opens in a new tab. If it cannot be found, return here and scan the controller QR on your laptop. Both devices must be on the same network.";
-      window.open(url, "_blank", "noopener,noreferrer");
+        "Opening your laptop. If it cannot be found, use Back and scan the controller QR on your laptop. Both devices must be on the same network.";
+      location.assign(url);
       return;
     }
     $("codeConnect").disabled = true;
