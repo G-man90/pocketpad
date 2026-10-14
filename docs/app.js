@@ -8,6 +8,7 @@ import {
   packet,
   validatePairLink,
 } from "./model.js";
+import { normalizeCode, codeLink, localCompanion } from "./pairing.js";
 const $ = (id) => document.getElementById(id),
   controls = $("controls"),
   stage = $("stage");
@@ -444,6 +445,73 @@ function openConnect() {
   $("connectError").textContent = "";
   $("connectDialog").showModal();
 }
+let pairAttempt = 0;
+async function requestCodePair(value) {
+  const attempt = ++pairAttempt;
+  try {
+    const code = normalizeCode(value);
+    $("wifiCode").value = code;
+    if (!localCompanion(location)) {
+      const url = codeLink(code);
+      $("codeFallback").href = url;
+      $("codeFallback").hidden = false;
+      $("pairStatus").textContent =
+        "Your laptop opens in a new tab. If it cannot be found, return here and scan the controller QR on your laptop. Both devices must be on the same network.";
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    $("codeConnect").disabled = true;
+    $("pairStatus").textContent = "Asking your laptop…";
+    const name = /iPhone|iPad/.test(navigator.userAgent)
+      ? "iPhone / iPad"
+      : /Android/.test(navigator.userAgent)
+        ? "Android phone"
+        : "Browser controller";
+    const response = await fetch("/api/pair", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, name }),
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = await response.json();
+    if (response.status !== 202)
+      throw Error(data.message || "Could not request pairing.");
+    $("pairStatus").textContent =
+      "Tap Allow on your laptop to connect this phone. This request expires in one minute.";
+    for (let poll = 0; poll < 60 && attempt === pairAttempt; poll++) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await fetch(`/api/pair/${data.id}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (attempt !== pairAttempt) return;
+      if (result.status === 202) continue;
+      if (result.ok) {
+        const approved = await result.json();
+        location.replace(validatePairLink(approved.url));
+        return;
+      }
+      throw Error(
+        result.status === 403
+          ? "Your laptop declined this request. Try again when you are ready."
+          : "Pairing expired. Check the code on your laptop and try again.",
+      );
+    }
+    if (attempt === pairAttempt)
+      throw Error("Pairing timed out. Please try again.");
+  } catch (e) {
+    if (attempt === pairAttempt)
+      $("pairStatus").textContent =
+        e.name === "TimeoutError" || e.name === "TypeError"
+          ? "Cannot reach the laptop. Check the Wi-Fi, allow local connections in the companion, or try offline Wi-Fi."
+          : e.message;
+  } finally {
+    if (attempt === pairAttempt) $("codeConnect").disabled = false;
+  }
+}
+$("codeForm").onsubmit = (e) => {
+  e.preventDefault();
+  requestCodePair($("wifiCode").value);
+};
 for (const id of ["connectTop", "connectBottom", "helpButton"])
   $(id).onclick = openConnect;
 $("openPairLink").onclick = () => {
@@ -485,6 +553,7 @@ function status(connected, label) {
   if (!connected) $("latency").textContent = "NOT CONNECTED";
 }
 let pairingToken = new URLSearchParams(location.hash.slice(1)).get("token");
+const incomingCode = new URLSearchParams(location.hash.slice(1)).get("code");
 if (pairingToken && /^[a-f0-9]{32}$/.test(pairingToken)) {
   try {
     sessionStorage.setItem("pocketpad.token", pairingToken);
@@ -650,4 +719,8 @@ new ResizeObserver(() => {
   }
 }).observe(stage);
 render();
-if (pairingToken && location.port === "3210") connectWifi();
+if (incomingCode && localCompanion(location)) {
+  history.replaceState(null, "", location.pathname);
+  openConnect();
+  requestCodePair(incomingCode);
+} else if (pairingToken && localCompanion(location)) connectWifi();

@@ -1,5 +1,7 @@
 # Third-party software
 
+Local discovery uses Makaretu.Dns.Multicast 0.27.0 and Makaretu.Dns 2.0.1 (MIT, Richard Schneider). Their dependencies include Common.Logging and Common.Logging.Core 3.4.1 (Apache 2.0), IPNetwork2 2.1.2 (BSD), SimpleBase 1.3.1 (Apache 2.0), and Tmds.LibC 0.2.0 (MIT). License texts for these packages are included in `licenses/` and copied into the Windows distribution. Source: https://github.com/richardschneider/net-mdns and https://github.com/richardschneider/net-dns.
+
 PocketPad uses qrcode-generator 2.0.4 by Kazuhiko Arase (MIT). Its copyright and license notice is retained at the top of web/vendor/qr.js. Source: https://github.com/kazuhikoarase/qrcode-generator
 
 The Windows companion uses Nefarius.ViGEm.Client 1.21.256 (MIT), Copyright Nefarius Software Solutions e.U. Source and license: https://github.com/nefarius/ViGEm.NET

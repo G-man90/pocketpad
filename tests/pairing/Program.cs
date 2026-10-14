@@ -1,0 +1,26 @@
+var now = DateTimeOffset.UtcNow;
+var pairing = new PairingService(() => now);
+void Check(bool ok, string label) { if (!ok) throw new Exception(label); Console.WriteLine("PASS: " + label); }
+Check(System.Text.RegularExpressions.Regex.IsMatch(pairing.Code, "^[A-Z]{5}$"), "five-letter code");
+Check(pairing.Request("wrong", "phone", "phone", "laptop").Status == 400, "wrong code rejected");
+var request = pairing.Request(pairing.Code.ToLowerInvariant(), "Phone", "phone", "laptop");
+Check(request.Status == 202 && pairing.Poll(request.Id!, "phone").Status == 202, "code alone cannot authorize input");
+Check(pairing.Poll(request.Id!, "other").Status == 410, "approval receipt bound to requesting address");
+Check(pairing.Decide(request.Id!, true), "laptop can approve");
+Check(pairing.Poll(request.Id!, "phone") == (200, "laptop"), "approved receipt returns correct local endpoint");
+Check(pairing.Poll(request.Id!, "phone").Status == 410, "receipt cannot be replayed");
+request = pairing.Request(pairing.Code, "Phone", "phone", "laptop");
+pairing.Decide(request.Id!, false);
+Check(pairing.Poll(request.Id!, "phone").Status == 403, "declined request stays rejected");
+request = pairing.Request(pairing.Code, "Phone", "phone", "laptop");
+now = now.AddSeconds(61);
+Check(!pairing.Decide(request.Id!, true) && pairing.Pending.Length == 0, "pending approvals expire after a minute");
+var expiry = pairing.Expires;
+now = now.AddMinutes(16);
+Check(pairing.Expires > expiry && pairing.Expires > now, "codes automatically renew after fifteen minutes");
+for (var i=0; i<20; i++) pairing.Request("wrong", "phone", "phone", "laptop");
+Check(pairing.Request(pairing.Code, "Phone", "phone", "laptop").Status == 429, "pairing attempts are globally rate limited");
+now = now.AddMinutes(1);
+Check(pairing.Request(pairing.Code, "Phone", "phone", "laptop").Status == 202, "rate limit recovers after one minute");
+pairing.Rotate();
+Check(pairing.Pending.Length == 0, "renewing code cancels pending requests");

@@ -754,6 +754,7 @@ dialog h2 {
   padding: 23px 0;
   border-bottom: 1px solid var(--line);
 }
+.connection-method > div { min-width: 0; flex: 1; }
 .method-icon {
   font-size: 29px;
   color: var(--lime);
@@ -1227,6 +1228,23 @@ summary {
   .editing-page .controller-panel {
     height: calc(100dvh - 61px);
   }
+}
+#wifiCode {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 22px;
+}
+#pairStatus {
+  color: var(--lime);
+  font-size: 12px;
+  line-height: 1.6;
+}
+#codeFallback {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+#codeFallback[hidden] {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   * {

@@ -6,6 +6,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <AssemblyName>PocketPad</AssemblyName>
   </PropertyGroup>
-  <ItemGroup><PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" /><PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" /></ItemGroup>
   <ItemGroup><Content Include="../web/**" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><Content Include="SetupNetwork.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" /></ItemGroup>
 </Project>

@@ -18,84 +18,159 @@
     </header>
     <main class="host-main">
       <div class="eyebrow">PAIR ONCE. PLAY YOUR WAY.</div>
-      <h1>Meet your new controller.</h1>
+      <h1>Five letters. Let’s play.</h1>
       <p class="host-intro">
-        Keep this companion running. Connect your phone to the same Wi-Fi, then
-        scan the code.
+        Keep PocketPad running here. Join the same Wi-Fi on your phone, or
+        create your own offline network below.
       </p>
+      <section id="pairRequests" class="info-card" hidden aria-live="polite">
+        <h2>Allow this controller?</h2>
+        <p>Only allow a request you just made on your phone.</p>
+        <div id="pendingList"></div>
+      </section>
       <section class="host-grid">
         <div class="qr-card">
-          <div id="qr" aria-label="Phone pairing QR code"></div>
-          <h2>Point. Scan. Play.</h2>
-          <p>Use your phone’s camera to open the controller.</p>
-          <label class="field-label" for="address">Laptop network address</label
-          ><select id="address"></select
-          ><button id="copyLink" class="button lime">
-            Copy pairing link ↗
-          </button>
-          <p class="small">
-            If the phone cannot connect, select your Wi-Fi address and allow
-            PocketPad on your Windows Private network. Guest Wi-Fi may block
-            connections.
+          <div class="section-label">YOUR PAIRING CODE</div>
+          <div
+            class="pair-code"
+            id="pairCode"
+            aria-label="Five-letter pairing code"
+          >
+            ·····
+          </div>
+          <p>
+            Open
+            <a
+              href="https://g-man90.github.io/pocketpad/"
+              target="_blank"
+              rel="noreferrer"
+              >PocketPad</a
+            >
+            on your phone. Tap Connect, enter these five letters, then tap Allow
+            here.
           </p>
+          <p id="codeExpiry" class="small"></p>
+          <button class="text-button" id="newCode">Get a new code ↻</button>
+          <div class="divider"></div>
+          <div class="section-label">OR SCAN TO CONNECT INSTANTLY</div>
+          <div id="qr" aria-label="Phone controller QR code"></div>
+          <p>No typing. Scan with your phone’s camera.</p>
+          <span id="networkTag" class="badge"></span>
+          <details class="network-details">
+            <summary>Choose a connection</summary>
+            <label class="field-label" for="address">Laptop connections</label
+            ><select id="address"></select
+            ><button id="copyLink" class="button subtle">
+              Copy controller link ↗
+            </button>
+          </details>
+          <p id="discoveryStatus" class="small"></p>
         </div>
         <div class="host-details">
           <div class="info-card">
             <div class="section-label">CONNECTION STATUS</div>
             <h2 id="hostStatus">Starting up…</h2>
             <p id="driverStatus"></p>
-            <div class="divider"></div>
-            <span class="field-label">Bluetooth</span>
-            <p id="bleStatus"></p>
-            <span class="field-label">Pairing key</span>
-            <div class="key-row">
-              <code id="pairingKey"></code
-              ><button
-                id="copyKey"
-                class="icon-button"
-                aria-label="Copy pairing key"
-              >
-                ⧉
-              </button>
-            </div>
-            <p class="small">
-              For Bluetooth, open the live PocketPad website in Android Chrome
-              and enter this key. Your adapter must support Bluetooth LE
-              peripheral mode.
-            </p>
-            <a
-              href="https://g-man90.github.io/pocketpad/"
-              target="_blank"
-              rel="noreferrer"
-              class="text-button"
-              >Open live controller ↗</a
-            >
-          </div>
-          <div class="info-card">
-            <h3>Ready for your favorite game.</h3>
-            <p>
-              Windows receives an Xbox-compatible controller. You can still pick
-              Xbox, PS4, or PS5 layouts on your phone.
-            </p>
             <p id="driverHelp" hidden>
-              The ViGEmBus driver is required. This legacy dependency is no
-              longer maintained. Install only from its
+              The ViGEmBus driver is required. Install it from its
               <a
                 href="https://github.com/nefarius/ViGEmBus/releases/tag/v1.22.0"
                 target="_blank"
                 rel="noreferrer"
                 >official release</a
-              >, then restart PocketPad.
+              >, then restart PocketPad. This is a legacy driver.
             </p>
+            <div class="divider"></div>
+            <h3>Wi-Fi won’t connect?</h3>
+            <p>
+              First allow PocketPad through Windows Firewall. Guest, school and
+              hotel networks may still block devices from reaching each other.
+              Try offline play below.
+            </p>
+            <button id="networkHelp" class="button subtle">
+              Allow local connections
+            </button>
             <p class="small">
-              Pairing keys are renewed each time the companion starts. Keep the
-              key private. Close the companion to stop accepting connections.
+              Windows will ask for administrator permission. This allows only
+              PocketPad’s controller and discovery ports from your local
+              network.
             </p>
           </div>
+          <div class="info-card offline-card">
+            <div class="section-label">NO ROUTER. NO INTERNET.</div>
+            <h2>Your own play network.</h2>
+            <p id="offlineStatus"></p>
+            <button id="offlineStart" class="button lime">
+              Start offline Wi-Fi</button
+            ><button id="offlineStop" class="button subtle" hidden>
+              Stop offline Wi-Fi
+            </button>
+            <div id="offlineSteps" hidden>
+              <div class="divider"></div>
+              <h3>1. Join your laptop’s Wi-Fi</h3>
+              <div
+                id="wifiQr"
+                class="small-qr"
+                aria-label="Join offline Wi-Fi QR code"
+              ></div>
+              <p>
+                Scan and confirm Join on your phone. Stay connected if it says
+                “No internet”.
+              </p>
+              <p class="wifi-credentials">
+                <strong id="wifiName"></strong><br />Password:
+                <code id="wifiPassword"></code>
+              </p>
+              <h3>2. Open your controller</h3>
+              <div
+                id="offlineQr"
+                class="small-qr"
+                aria-label="Offline controller QR code"
+              ></div>
+              <p id="offlineOpenHint"></p>
+              <p class="small">
+                Already have PocketPad open on your phone? Enter the five-letter
+                code instead. The public website needs internet to open for the
+                first time; these QR codes do not.
+              </p>
+            </div>
+            <p class="small">
+              Requires a compatible Wi-Fi Direct adapter. Turn off Windows
+              Mobile hotspot before starting. Closing the companion stops this
+              network.
+            </p>
+            <a class="text-button" href="ms-settings:network-mobilehotspot"
+              >Open Windows hotspot settings ↗</a
+            >
+          </div>
+          <details class="info-card">
+            <summary>Bluetooth · compatible Android</summary>
+            <p id="bleStatus"></p>
+            <button id="bluetoothRetry" class="button subtle">
+              Check Bluetooth again</button
+            ><span class="field-label">Bluetooth pairing key</span>
+            <div class="key-row">
+              <code id="pairingKey"></code
+              ><button
+                id="copyKey"
+                class="icon-button"
+                aria-label="Copy Bluetooth key"
+              >
+                ⧉
+              </button>
+            </div>
+            <p class="small">
+              Open the live HTTPS website in Android Chrome and enter this key
+              under Bluetooth. iPhone and iPad use Wi-Fi. Your laptop adapter
+              must support Bluetooth LE peripheral mode.
+            </p>
+          </details>
         </div>
       </section>
+      <p id="hostMessage" role="status"></p>
       <p class="host-footer">
-        No account. No cloud relay. Your inputs stay on your local connection.
+        No account. No cloud relay. Your controller stays on your local
+        connection.
       </p>
     </main>
     <script src="vendor/qr.js"></script>

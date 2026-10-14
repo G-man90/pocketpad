@@ -257,13 +257,56 @@
         <div>
           <h3>Wi-Fi <span class="badge">ALL DEVICES</span></h3>
           <p>
-            On the same Wi-Fi? Scan the QR code in the Windows companion. Your
-            controller opens and pairs automatically.
+            On the same Wi-Fi? Enter the five letters on your laptop, then
+            approve your phone there. Or scan its controller QR to pair
+            instantly.
           </p>
+          <form id="codeForm">
+            <label class="field-label" for="wifiCode"
+              >Five-letter laptop code</label
+            >
+            <input
+              id="wifiCode"
+              type="text"
+              maxlength="5"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              placeholder="ABCDE"
+              required
+              pattern="[A-Za-z]{5}"
+              aria-describedby="codeHelp"
+            />
+            <button id="codeConnect" class="button lime" type="submit">
+              Connect with code ↗
+            </button>
+          </form>
+          <p id="pairStatus" role="status"></p>
+          <p id="codeHelp">
+            Code pairing uses local discovery. If your laptop cannot be found,
+            scan its controller QR instead.
+          </p>
+          <a
+            id="codeFallback"
+            target="_blank"
+            rel="noreferrer"
+            class="text-button"
+            hidden
+            >Open laptop pairing page ↗</a
+          >
+          <details>
+            <summary>Wi-Fi blocks the connection?</summary>
+            <p>
+              On your laptop, click <strong>Allow local connections</strong>. If
+              that does not help, click <strong>Start offline Wi-Fi</strong>.
+              Scan Join Wi-Fi, confirm joining on your phone, then scan Open
+              controller. Stay connected when your phone says “No internet”.
+            </p>
+          </details>
           <a
             class="button lime"
             id="downloadCompanion"
-            href="https://github.com/G-man90/pocketpad/releases/download/v0.1.0-beta/PocketPad-Windows-x64.zip"
+            href="https://github.com/G-man90/pocketpad/releases/download/v0.2.0-beta/PocketPad-Windows-x64.zip"
             >Download Windows companion ↓</a
           >
           <details>

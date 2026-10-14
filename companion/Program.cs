@@ -14,11 +14,24 @@ var app=builder.Build();
 using var bridge=new GamepadBridge();
 using var bluetooth=new BluetoothBridge(bridge);
 await bluetooth.Start();
+var pairing = new PairingService();
+using var offline = new OfflineWifi();
+using var discovery = new LocalDiscovery();
+string? selectedAddress = null;
+void UpdateDiscovery() {
+    var addresses = NetworkCatalog.Read();
+    var address = offline.Active ? offline.Address ?? addresses.FirstOrDefault(a => a.Kind == "Hotspot / Wi-Fi Direct")?.Address : addresses.FirstOrDefault(a => a.Address == selectedAddress)?.Address ?? addresses.FirstOrDefault()?.Address;
+    discovery.Update(pairing.HostName, address);
+}
+using var discoveryTimer = new Timer(_ => { try { UpdateDiscovery(); } catch { } }, null, 0, 3000);
 bool Local(HttpContext ctx)=> ctx.Connection.RemoteIpAddress is { } ip && IPAddress.IsLoopback(ip);
+bool SameOrigin(HttpContext ctx) => ctx.Request.Headers.Origin.Count == 0 || ctx.Request.Headers.Origin == $"http://{ctx.Request.Host}";
+bool HostAction(HttpContext ctx) => Local(ctx) && SameOrigin(ctx) && bridge.Authorized(ctx.Request.Headers["X-PocketPad-Token"]);
 app.Use(async(ctx,next)=> {
-    if(ctx.Request.Host.Host!="localhost" && !IPAddress.TryParse(ctx.Request.Host.Host,out _)) { ctx.Response.StatusCode=400; return; }
+    if(ctx.Request.Host.Host!="localhost" && !string.Equals(ctx.Request.Host.Host, pairing.HostName, StringComparison.OrdinalIgnoreCase) && !IPAddress.TryParse(ctx.Request.Host.Host,out _)) { ctx.Response.StatusCode=400; return; }
     ctx.Response.Headers["X-Content-Type-Options"]="nosniff";
     ctx.Response.Headers["Referrer-Policy"]="no-referrer";
+    ctx.Response.Headers["Permissions-Policy"]="camera=(), microphone=(), geolocation=()";
     ctx.Response.Headers["Cache-Control"]="no-store";
     ctx.Response.Headers["Content-Security-Policy"]="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self' ws:; frame-ancestors 'none'";
     if(ctx.Request.Path.StartsWithSegments("/host") && !Local(ctx)) { ctx.Response.StatusCode=403; return; }
@@ -27,14 +40,56 @@ app.Use(async(ctx,next)=> {
 app.UseWebSockets();
 app.UseDefaultFiles(); app.UseStaticFiles();
 app.MapGet("/api/host",(HttpContext ctx)=> {
-    if(!Local(ctx) || (ctx.Request.Headers.Origin.Count>0 && ctx.Request.Headers.Origin!=$"http://{ctx.Request.Host}")) return Results.StatusCode(403);
-    var addresses=NetworkInterface.GetAllNetworkInterfaces().Where(n=>n.OperationalStatus==OperationalStatus.Up && n.NetworkInterfaceType!=NetworkInterfaceType.Loopback)
-        .OrderByDescending(n=>n.GetIPProperties().GatewayAddresses.Any(g=>g.Address.AddressFamily==AddressFamily.InterNetwork && !g.Address.Equals(IPAddress.Any)))
-        .ThenByDescending(n=>n.NetworkInterfaceType==NetworkInterfaceType.Wireless80211)
-        .SelectMany(n=>n.GetIPProperties().UnicastAddresses).Where(a=>a.Address.AddressFamily==AddressFamily.InterNetwork).Select(a=>a.Address.ToString()).ToArray();
-    return Results.Json(new { ready=bridge.Ready, driver=bridge.Status, bluetooth=bluetooth.Status, token=bridge.Token, addresses, connected=bridge.Owner!=null, port=3210 });
+    if(!Local(ctx) || !SameOrigin(ctx)) return Results.StatusCode(403);
+    return Results.Json(new { ready=bridge.Ready, driver=bridge.Status, bluetooth=bluetooth.Status, token=bridge.Token,
+        addresses=NetworkCatalog.Read(), connected=bridge.Owner!=null, port=3210, code=pairing.Code, codeExpires=pairing.Expires,
+        hostname=pairing.HostName, discovery=discovery.Status, pending=pairing.Pending, offline=offline.Snapshot() });
+});
+app.MapPost("/api/host/{action}", async (string action, HttpContext ctx) => {
+    if (!HostAction(ctx)) return Results.StatusCode(403);
+    switch (action) {
+        case "new-code": pairing.Rotate(); UpdateDiscovery(); break;
+        case "offline-start": offline.Start(pairing.Code); UpdateDiscovery(); break;
+        case "offline-stop": offline.Stop(); UpdateDiscovery(); break;
+        case "bluetooth-retry": await bluetooth.Restart(); break;
+        case "network-help":
+            try {
+                var script = Path.Combine(AppContext.BaseDirectory, "SetupNetwork.ps1");
+                var executable = Environment.ProcessPath!;
+                using var process = Process.Start(new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe")) {
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{script}\" -AppPath \"{executable}\"", UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden
+                });
+                if (process == null) throw new InvalidOperationException();
+                await process.WaitForExitAsync(ctx.RequestAborted);
+                if (process.ExitCode != 0) return Results.Json(new { message = "Windows could not add the local connection rules. Check Windows Firewall or your administrator's network policy." }, statusCode: 409);
+                return Results.Ok(new { message = "PocketPad local-network access is enabled. Try pairing again. A router may still block connections between devices." });
+            } catch { return Results.Json(new { message = "Windows permission was cancelled or unavailable. Allow PocketPad through Windows Firewall for local networks." }, statusCode: 409); }
+        case "network-select":
+            var selection = await ctx.Request.ReadFromJsonAsync<NetworkSelection>();
+            if (!NetworkCatalog.Read().Any(a => a.Address == selection?.Address)) return Results.BadRequest();
+            selectedAddress = selection!.Address; UpdateDiscovery(); break;
+        case "pair-allow": case "pair-deny":
+            var decision = await ctx.Request.ReadFromJsonAsync<PairDecision>();
+            if (decision?.Id == null || !pairing.Decide(decision.Id, action == "pair-allow")) return Results.NotFound();
+            break;
+        default: return Results.NotFound();
+    }
+    return Results.Ok(new { message = "Done" });
+});
+app.MapPost("/api/pair", async (HttpContext ctx) => {
+    if (!SameOrigin(ctx)) return Results.StatusCode(403);
+    if (!bridge.Ready || bridge.Owner != null) return Results.Json(new { message = bridge.Ready ? "A controller is already connected." : bridge.Status }, statusCode: 409);
+    var input = await ctx.Request.ReadFromJsonAsync<PairInput>();
+    var result = pairing.Request(input?.Code, input?.Name, ctx.Connection.RemoteIpAddress!.ToString(), ctx.Connection.LocalIpAddress!.MapToIPv4().ToString());
+    return Results.Json(new { id = result.Id, message = result.Status == 202 ? "Tap Allow on your laptop." : result.Status == 429 ? "Too many requests. Wait a minute and try again." : "That code expired or is incorrect. Check your laptop." }, statusCode: result.Status);
+});
+app.MapGet("/api/pair/{id}", (string id, HttpContext ctx) => {
+    if (!SameOrigin(ctx)) return Results.StatusCode(403);
+    var result = pairing.Poll(id, ctx.Connection.RemoteIpAddress!.ToString());
+    return result.Status == 200 ? Results.Json(new { url = $"http://{result.LocalAddress}:3210/#token={bridge.Token}" }) : Results.StatusCode(result.Status);
 });
 app.Map("/ws", async ctx=> {
+    if (!SameOrigin(ctx)) { ctx.Response.StatusCode=403; return; }
     if(!ctx.WebSockets.IsWebSocketRequest) { ctx.Response.StatusCode=400; return; }
     using var ws=await ctx.WebSockets.AcceptWebSocketAsync();
     var id="wifi:"+Guid.NewGuid();
@@ -76,3 +131,7 @@ app.Lifetime.ApplicationStarted.Register(()=> {
     if(!args.Contains("--no-browser")) Process.Start(new ProcessStartInfo("http://localhost:3210/host.html") { UseShellExecute=true });
 });
 await app.RunAsync();
+
+record PairInput(string? Code, string? Name);
+record PairDecision(string? Id);
+record NetworkSelection(string? Address);

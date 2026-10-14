@@ -1,9 +1,15 @@
-PocketPad 0.1.0 is the first beta for Windows x64, Android, and iPhone/iPad.
+PocketPad 0.2.0 beta makes laptop pairing simpler.
 
-Extract the ZIP and run **PocketPad.exe**. The companion opens a QR pairing page on your laptop. Scan it from a phone on the same trusted Wi-Fi, choose a layout, and play a Windows game with Xbox-controller support.
+- Enter a five-letter code on your phone, then approve it on the laptop. Local discovery replaces typing IP addresses. QR pairing is still available when discovery is blocked.
+- Connections are labeled Wi-Fi, Ethernet, Hotspot / Wi-Fi Direct, Virtual / VPN, or Bluetooth network. Physical network connections are preferred.
+- Start/stop an offline Wi-Fi Direct network on supported Windows laptops. Separate QR codes join Wi-Fi and open the locally served controller.
+- Allow local connections launches a Windows administrator prompt for firewall rules limited to PocketPad's TCP 3210 and UDP 5353 ports and your local subnet.
+- Retry Bluetooth after switching the radio on, with clearer status messages.
 
-Included: customizable Xbox/PS4/PS5 touch layouts, simultaneous sticks/buttons, saved profiles, Wi-Fi pairing, game-rumble forwarding, disconnect watchdog, and a Bluetooth LE connection path for supported hardware.
+**Upgrade:** close your old companion, extract this ZIP into a new folder, and run PocketPad.exe. Refresh the live web app to get code pairing.
 
-**Requirements and limits:** a separately installed ViGEmBus driver is required (legacy, end-of-life; not bundled). Windows 10 version 2004+ or Windows 11 x64. The executable is unsigned. iPhone/iPad uses Wi-Fi without browser vibration. All presets output Xbox-compatible input. Bluetooth is implemented but not physically verified; the development laptop reported RadioNotAvailable. No driver or firewall changes happen automatically.
+**Verified:** five-letter discovery and approval in the browser; pairing expiry, rate limits and access checks; real Windows XInput buttons/sticks/triggers, game rumble forwarding, disconnection safety and reconnection.
 
-The package includes the .NET runtime, setup instructions, and third-party notices. Source and detailed verification notes are in the repository.
+**Hardware limits:** the test laptop now reports **Bluetooth ready** after an earlier advertising rejection. A real phone Bluetooth connection is still unverified. Windows rejected the first Wi-Fi Direct start, so successful offline network creation and phone joining are also unverified. The app reports start failures instead of claiming it is ready. Some routers block local discovery or all device-to-device traffic.
+
+Windows 10 version 2004+ / Windows 11 x64. Unsigned self-contained executable. Separately installed legacy ViGEmBus driver required. iPhone/iPad uses Wi-Fi without browser vibration. PS4/PS5 layouts still output an Xbox-compatible controller. No driver installation or firewall changes happen automatically.

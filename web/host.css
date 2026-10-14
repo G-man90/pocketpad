@@ -1,3 +1,58 @@
+.pair-code {
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--lime);
+  margin: 20px 0 12px;
+}
+.qr-card a {
+  color: var(--lime);
+}
+.network-details {
+  margin-top: 18px;
+  text-align: left;
+}
+summary {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.small-qr svg {
+  width: 190px;
+  height: 190px;
+  max-width: 100%;
+  background: white;
+  border-radius: 10px;
+}
+.offline-card .button {
+  margin: 5px 0;
+}
+.wifi-credentials {
+  overflow-wrap: anywhere;
+}
+.pair-request {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.pair-request span {
+  flex: 1 1 150px;
+  overflow-wrap: anywhere;
+}
+#pairRequests {
+  margin-top: 24px;
+  border-color: var(--lime);
+}
+#hostMessage {
+  font-size: 13px;
+  color: var(--lime);
+  line-height: 1.6;
+}
+[hidden] {
+  display: none !important;
+}
 .host-main {
   max-width: 1060px;
   margin: 0 auto;
@@ -22,6 +77,7 @@
 }
 .qr-card,
 .info-card {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 15px;
   background: var(--panel);

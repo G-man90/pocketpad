@@ -8,6 +8,7 @@ public sealed class BluetoothBridge(GamepadBridge bridge) : IDisposable
     GattServiceProvider? provider;
     GattLocalCharacteristic? rumble;
     string? authenticatedDevice;
+    readonly SemaphoreSlim startGate = new(1, 1);
     public string Status { get; private set; } = "Checking Bluetooth…";
     public async Task Start()
     {
@@ -15,10 +16,15 @@ public sealed class BluetoothBridge(GamepadBridge bridge) : IDisposable
         {
             var adapter=await BluetoothAdapter.GetDefaultAsync();
             if(adapter == null || !adapter.IsPeripheralRoleSupported) { Status="This Bluetooth adapter cannot host a controller connection. Use Wi-Fi."; return; }
+            var radio = await adapter.GetRadioAsync();
+            if (radio != null && radio.State != Windows.Devices.Radios.RadioState.On) { Status="Bluetooth is switched off. Turn it on in Windows, then click Check Bluetooth again."; return; }
             var result=await GattServiceProvider.CreateAsync(Guid.Parse(ServiceId));
             if(result.Error != BluetoothError.Success) { Status="Bluetooth unavailable: " + result.Error; return; }
             provider=result.ServiceProvider;
-            provider.AdvertisementStatusChanged += (_, e) => { Status=e.Status == GattServiceProviderAdvertisementStatus.Started ? "Bluetooth ready" : "Bluetooth: " + e.Status + " (" + e.Error + ")"; };
+            provider.AdvertisementStatusChanged += (sender, e) => {
+                if (sender != provider) return;
+                Status = e.Status == GattServiceProviderAdvertisementStatus.Started ? "Bluetooth ready" : e.Status == GattServiceProviderAdvertisementStatus.Aborted ? "Bluetooth is on, but Windows could not advertise the controller service" + (e.Error == BluetoothError.Success ? "." : " (" + e.Error + ").") + " Close other Bluetooth sharing apps and retry, or use Wi-Fi." : "Bluetooth: " + e.Status;
+            };
             var auth=await Make("b984a101-65b2-4ee5-9946-b88096e0a321", GattCharacteristicProperties.Write);
             var input=await Make("b984a102-65b2-4ee5-9946-b88096e0a321", GattCharacteristicProperties.WriteWithoutResponse | GattCharacteristicProperties.Write);
             rumble=await Make("b984a103-65b2-4ee5-9946-b88096e0a321", GattCharacteristicProperties.Notify);
@@ -50,8 +56,8 @@ public sealed class BluetoothBridge(GamepadBridge bridge) : IDisposable
                 catch { } finally { deferral.Complete(); }
             };
             bridge.Rumble += SendRumble;
-            provider.StartAdvertising(new GattServiceProviderAdvertisingParameters { IsConnectable=true, IsDiscoverable=true });
             Status="Starting Bluetooth advertising…";
+            provider.StartAdvertising(new GattServiceProviderAdvertisingParameters { IsConnectable=true, IsDiscoverable=true });
         }
         catch(Exception ex) { Status="Bluetooth unavailable: " + ex.GetType().Name + ". Use Wi-Fi."; }
     }
@@ -66,5 +72,10 @@ public sealed class BluetoothBridge(GamepadBridge bridge) : IDisposable
         if(rumble==null || bridge.Owner!=authenticatedDevice) return;
         try { using var writer=new DataWriter(); writer.WriteBytes([large,small]); foreach(var subscriber in rumble.SubscribedClients) if("ble:"+subscriber.Session.DeviceId.Id==authenticatedDevice) await rumble.NotifyValueAsync(writer.DetachBuffer(),subscriber); } catch { }
     }
-    public void Dispose() { bridge.Rumble-=SendRumble; provider?.StopAdvertising(); }
+    public async Task Restart()
+    {
+        await startGate.WaitAsync();
+        try { Dispose(); await Start(); } finally { startGate.Release(); }
+    }
+    public void Dispose() { bridge.Rumble-=SendRumble; if(authenticatedDevice != null) bridge.Release(authenticatedDevice); authenticatedDevice=null; rumble=null; provider?.StopAdvertising(); provider=null; }
 }
