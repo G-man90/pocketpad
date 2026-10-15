@@ -50,8 +50,11 @@ jobs:
           gh release upload $env:RELEASE_TAG release/PocketPad-Windows-x64.zip --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Upload failed' }
           $digest = 'sha256:' + (Get-FileHash release/PocketPad-Windows-x64.zip).Hash.ToLowerInvariant()
-          $remote = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$env:RELEASE_TAG" | ConvertFrom-Json
+          # The tag lookup omits unpublished drafts; list drafts with the authenticated token.
+          $releases = gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | ConvertFrom-Json
           if ($LASTEXITCODE -ne 0) { throw 'Cannot verify uploaded asset' }
+          $remote = $releases | Where-Object tag_name -eq $env:RELEASE_TAG
+          if (!$remote -or !$remote.draft) { throw 'Expected draft release not found' }
           $asset = $remote.assets | Where-Object name -eq 'PocketPad-Windows-x64.zip'
           if ($asset.digest -ne $digest) { throw 'Release checksum mismatch' }
           gh release edit $env:RELEASE_TAG --draft=false --prerelease --notes-file RELEASE-NOTES.md
