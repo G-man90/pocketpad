@@ -4,7 +4,7 @@ Your phone, your controller. A customizable touch gamepad for Windows 10 (versio
 
 **Live web app:** https://g-man90.github.io/pocketpad/
 
-**Windows download:** https://github.com/G-man90/pocketpad/releases/download/v0.2.0-beta/PocketPad-Windows-x64.zip
+**Windows download:** https://github.com/G-man90/pocketpad/releases/download/v0.2.1-beta/PocketPad-Windows-x64.zip
 
 ## Start playing
 

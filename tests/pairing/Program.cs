@@ -7,7 +7,9 @@ var request = pairing.Request(pairing.Code.ToLowerInvariant(), "Phone", "phone",
 Check(request.Status == 202 && pairing.Poll(request.Id!, "phone").Status == 202, "code alone cannot authorize input");
 Check(pairing.Poll(request.Id!, "other").Status == 410, "approval receipt bound to requesting address");
 Check(pairing.Decide(request.Id!, true), "laptop can approve");
+Check(pairing.Progress?.Stage == "approved", "approval remains distinct from connection");
 Check(pairing.Poll(request.Id!, "phone") == (200, "laptop"), "approved receipt returns correct local endpoint");
+Check(pairing.Progress?.Stage == "received", "laptop can tell whether phone collected approval");
 Check(pairing.Poll(request.Id!, "phone").Status == 410, "receipt cannot be replayed");
 request = pairing.Request(pairing.Code, "Phone", "phone", "laptop");
 pairing.Decide(request.Id!, false);

@@ -70,6 +70,12 @@
           <div class="info-card">
             <div class="section-label">CONNECTION STATUS</div>
             <h2 id="hostStatus">Starting up…</h2>
+            <p id="connectionHelp" role="status"></p>
+            <div class="input-test">
+              <h3>Test your controller</h3>
+              <p id="inputTest">Tap A / Cross or move a stick on your device.</p>
+              <p id="inputCount" class="small">Waiting for a live controller connection</p>
+            </div>
             <p id="driverStatus"></p>
             <p id="driverHelp" hidden>
               The ViGEmBus driver is required. Install it from its
@@ -174,6 +180,6 @@
       </p>
     </main>
     <script src="vendor/qr.js"></script>
-    <script src="host.js"></script>
+    <script type="module" src="host.js"></script>
   </body>
 </html>

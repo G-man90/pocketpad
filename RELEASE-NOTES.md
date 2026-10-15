@@ -1,15 +1,15 @@
-PocketPad 0.2.0 beta makes laptop pairing simpler.
+PocketPad 0.2.1 beta makes connection progress visible.
 
-- Enter a five-letter code on your phone, then approve it on the laptop. Local discovery replaces typing IP addresses. QR pairing is still available when discovery is blocked.
-- Connections are labeled Wi-Fi, Ethernet, Hotspot / Wi-Fi Direct, Virtual / VPN, or Bluetooth network. Physical network connections are preferred.
-- Start/stop an offline Wi-Fi Direct network on supported Windows laptops. Separate QR codes join Wi-Fi and open the locally served controller.
-- Allow local connections launches a Windows administrator prompt for firewall rules limited to PocketPad's TCP 3210 and UDP 5353 ports and your local subnet.
-- Retry Bluetooth after switching the radio on, with clearer status messages.
+- The laptop distinguishes a pairing request, approval, the device collecting approval, and an active controller connection.
+- A controller tester shows the last button or stick movement actually received by Windows, including brief taps.
+- Network permission messages explain that allowing access does not itself pair a device.
+- Code pairing works without AbortSignal.timeout, improving compatibility with older iPad browsers. iPad desktop-mode browsers are labeled correctly.
+- The controller confirms connection, shows helpful connection errors, and no longer displays “NOT CONNECTED” while waiting for its first latency measurement.
 
-**Upgrade:** close your old companion, extract this ZIP into a new folder, and run PocketPad.exe. Refresh the live web app to get code pairing.
+**Upgrade:** close your old companion, extract this ZIP, and run PocketPad.exe. Scan the controller QR with your iPad camera and open it in Safari. Keep the controller page visible. The laptop's tester confirms received controls.
 
-**Verified:** five-letter discovery and approval in the browser; pairing expiry, rate limits and access checks; real Windows XInput buttons/sticks/triggers, game rumble forwarding, disconnection safety and reconnection.
+**Validation:** automated pairing, timeout, authorization, and Windows controller tests. An actual iPad connection remains to be verified with the user; this release does not claim that the reported network problem is resolved.
 
-**Hardware limits:** the test laptop now reports **Bluetooth ready** after an earlier advertising rejection. A real phone Bluetooth connection is still unverified. Windows rejected the first Wi-Fi Direct start, so successful offline network creation and phone joining are also unverified. The app reports start failures instead of claiming it is ready. Some routers block local discovery or all device-to-device traffic.
+Five-letter codes still require local network discovery. Scan the controller QR if discovery is blocked. Some networks block all device-to-device traffic. Offline Wi-Fi creation and physical Bluetooth pairing remain unverified on this laptop; Windows previously rejected Wi-Fi Direct startup and Bluetooth advertising has been intermittent.
 
-Windows 10 version 2004+ / Windows 11 x64. Unsigned self-contained executable. Separately installed legacy ViGEmBus driver required. iPhone/iPad uses Wi-Fi without browser vibration. PS4/PS5 layouts still output an Xbox-compatible controller. No driver installation or firewall changes happen automatically.
+Windows 10 version 2004+ / Windows 11 x64. Unsigned self-contained executable. Separately installed legacy ViGEmBus driver required. iPhone/iPad uses Wi-Fi without browser vibration. PS4/PS5 layouts output an Xbox-compatible controller. No driver installation or firewall changes happen automatically.

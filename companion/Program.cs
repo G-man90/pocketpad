@@ -15,6 +15,7 @@ using var bridge=new GamepadBridge();
 using var bluetooth=new BluetoothBridge(bridge);
 await bluetooth.Start();
 var pairing = new PairingService();
+ControllerVisit? lastVisit = null;
 using var offline = new OfflineWifi();
 using var discovery = new LocalDiscovery();
 string? selectedAddress = null;
@@ -35,6 +36,8 @@ app.Use(async(ctx,next)=> {
     ctx.Response.Headers["Cache-Control"]="no-store";
     ctx.Response.Headers["Content-Security-Policy"]="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self' ws:; frame-ancestors 'none'";
     if(ctx.Request.Path.StartsWithSegments("/host") && !Local(ctx)) { ctx.Response.StatusCode=403; return; }
+    if(ctx.Request.Method == "GET" && (ctx.Request.Path == "/" || ctx.Request.Path == "/index.html") && !Local(ctx))
+        Interlocked.Exchange(ref lastVisit, new ControllerVisit(ctx.Connection.RemoteIpAddress!.ToString(), DateTimeOffset.UtcNow));
     await next();
 });
 app.UseWebSockets();
@@ -43,7 +46,8 @@ app.MapGet("/api/host",(HttpContext ctx)=> {
     if(!Local(ctx) || !SameOrigin(ctx)) return Results.StatusCode(403);
     return Results.Json(new { ready=bridge.Ready, driver=bridge.Status, bluetooth=bluetooth.Status, token=bridge.Token,
         addresses=NetworkCatalog.Read(), connected=bridge.Owner!=null, port=3210, code=pairing.Code, codeExpires=pairing.Expires,
-        hostname=pairing.HostName, discovery=discovery.Status, pending=pairing.Pending, offline=offline.Snapshot() });
+        hostname=pairing.HostName, discovery=discovery.Status, pending=pairing.Pending, pairing=pairing.Progress,
+        controller=bridge.Snapshot(), lastVisit=Volatile.Read(ref lastVisit), offline=offline.Snapshot() });
 });
 app.MapPost("/api/host/{action}", async (string action, HttpContext ctx) => {
     if (!HostAction(ctx)) return Results.StatusCode(403);
@@ -106,7 +110,7 @@ app.Map("/ws", async ctx=> {
         var hello=await ws.ReceiveAsync(buffer,timeout.Token);
         if(!hello.EndOfMessage || hello.MessageType!=WebSocketMessageType.Text) return;
         using var json=JsonDocument.Parse(buffer.AsMemory(0,hello.Count));
-        if(!json.RootElement.TryGetProperty("token",out var token) || token.ValueKind!=JsonValueKind.String || !bridge.Claim(id,token.GetString())) { await Send(new { type="error",message=bridge.Ready?"Pairing failed or another controller is connected.":bridge.Status }); return; }
+        if(!json.RootElement.TryGetProperty("token",out var token) || token.ValueKind!=JsonValueKind.String || !bridge.Claim(id,token.GetString(),ctx.Connection.RemoteIpAddress?.ToString())) { await Send(new { type="error",message=bridge.Ready?"Pairing failed or another controller is connected. Scan the current QR on your laptop to try again.":bridge.Status }); return; }
         bridge.Rumble+=Rumble;
         await Send(new {type="ready", output="Xbox 360 / XInput"});
         while(ws.State==WebSocketState.Open) {
@@ -135,3 +139,4 @@ await app.RunAsync();
 record PairInput(string? Code, string? Name);
 record PairDecision(string? Id);
 record NetworkSelection(string? Address);
+record ControllerVisit(string Address, DateTimeOffset At);

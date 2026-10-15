@@ -20,6 +20,7 @@ using(var ws=await Connect(token)){
  var heartbeat=Task.Run(async()=>{try{while(!heartbeatStop.IsCancellationRequested){await Task.Delay(33,heartbeatStop.Token);await ws.SendAsync(packet,WebSocketMessageType.Binary,true,heartbeatStop.Token);}}catch(OperationCanceledException){}});
  uint slot=99;for(var attempt=0;attempt<12&&slot==99;attempt++){for(uint i=0;i<4;i++)if(Native.XInputGetState(i,out var s)==0&&s.Gamepad.Buttons==0x1101&&s.Gamepad.LeftTrigger==255&&s.Gamepad.ThumbLX==16384)slot=i;if(slot==99)await Task.Delay(15);}
  Check(slot!=99,"real Windows XInput reports simultaneous buttons, trigger and joystick");
+ using(var diagnostics=JsonDocument.Parse(await http.GetStringAsync("http://localhost:3210/api/host"))){var d=diagnostics.RootElement.GetProperty("controller");Check(d.GetProperty("packets").GetInt64()>0&&d.GetProperty("lastAction").GetString()!.Contains("A / Cross"),"host tester reports actual received controls");}
  using(var competing=await Connect(token)){using var denied=await Receive(competing);Check(denied.RootElement.GetProperty("type").GetString()=="error","second controller cannot take over active session");}
  var vibration=new Native.Vibration{LeftMotor=30000,RightMotor=15000};Native.XInputSetState(slot,ref vibration);using var feedback=await Receive(ws);Check(feedback.RootElement.GetProperty("type").GetString()=="rumble"&&feedback.RootElement.GetProperty("large").GetInt32()>0,"game rumble returns over WebSocket");
  vibration=default;Native.XInputSetState(slot,ref vibration);

@@ -1,3 +1,4 @@
+import { connectionSummary } from "./connection.js";
 const $ = (id) => document.getElementById(id);
 let info = null,
   link = "",
@@ -49,7 +50,7 @@ async function action(name, body) {
     throw Error(
       data.message || "Could not complete that action. Refresh and try again.",
     );
-  if (name === "network-help") $("hostMessage").textContent = data.message;
+  if (name === "network-help") $("hostMessage").textContent = data.message + " This grants network access; scan the controller QR to connect your device.";
   await refresh();
 }
 function bindAction(id, name) {
@@ -76,6 +77,15 @@ async function refresh() {
       : data.connected
         ? "Controller connected"
         : "Ready to pair";
+    $("connectionHelp").textContent = connectionSummary(data);
+    const controller = data.controller;
+    $("inputTest").textContent = controller?.lastActionAt
+      ? `${controller.lastAction} ✓ · ${new Date(controller.lastActionAt).toLocaleTimeString()}`
+      : "Tap A / Cross or move a stick on your device.";
+    $("inputTest").classList.toggle("received", !!controller?.lastActionAt);
+    $("inputCount").textContent = data.connected && controller?.packets > 0
+      ? "Live connection · controls are reaching Windows"
+      : "Waiting for a live controller connection";
     $("driverStatus").textContent = data.driver;
     $("bleStatus").textContent = data.bluetooth;
     $("driverHelp").hidden = data.ready;
@@ -161,6 +171,8 @@ async function refresh() {
     }
   } catch (e) {
     $("hostStatus").textContent = "Companion unavailable";
+    $("connectionHelp").textContent = "Open PocketPad.exe on this laptop, then refresh this page.";
+    $("inputCount").textContent = "Not connected";
     $("driverStatus").textContent = e.message;
   }
 }

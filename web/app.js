@@ -9,6 +9,7 @@ import {
   validatePairLink,
 } from "./model.js";
 import { normalizeCode, codeLink, localCompanion } from "./pairing.js";
+import { fetchWithTimeout } from "./connection.js";
 const $ = (id) => document.getElementById(id),
   controls = $("controls"),
   stage = $("stage");
@@ -462,16 +463,15 @@ async function requestCodePair(value) {
     }
     $("codeConnect").disabled = true;
     $("pairStatus").textContent = "Asking your laptop…";
-    const name = /iPhone|iPad/.test(navigator.userAgent)
+    const name = /iPhone|iPad/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
       ? "iPhone / iPad"
       : /Android/.test(navigator.userAgent)
         ? "Android phone"
         : "Browser controller";
-    const response = await fetch("/api/pair", {
+    const response = await fetchWithTimeout("/api/pair", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, name }),
-      signal: AbortSignal.timeout(5000),
     });
     const data = await response.json();
     if (response.status !== 202)
@@ -480,9 +480,7 @@ async function requestCodePair(value) {
       "Tap Allow on your laptop to connect this phone. This request expires in one minute.";
     for (let poll = 0; poll < 60 && attempt === pairAttempt; poll++) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      const result = await fetch(`/api/pair/${data.id}`, {
-        signal: AbortSignal.timeout(5000),
-      });
+      const result = await fetchWithTimeout(`/api/pair/${data.id}`);
       if (attempt !== pairAttempt) return;
       if (result.status === 202) continue;
       if (result.ok) {
@@ -501,7 +499,7 @@ async function requestCodePair(value) {
   } catch (e) {
     if (attempt === pairAttempt)
       $("pairStatus").textContent =
-        e.name === "TimeoutError" || e.name === "TypeError"
+        e.name === "TimeoutError" || e.name === "AbortError" || e.name === "TypeError"
           ? "Cannot reach the laptop. Check the Wi-Fi, allow local connections in the companion, or try offline Wi-Fi."
           : e.message;
   } finally {
@@ -550,7 +548,7 @@ function status(connected, label) {
   $("stageHint").textContent = connected
     ? "Windows output · Xbox-compatible controller"
     : "Try the controls · Connect to play on Windows";
-  if (!connected) $("latency").textContent = "NOT CONNECTED";
+  $("latency").textContent = connected ? "CONNECTED" : "NOT CONNECTED";
 }
 let pairingToken = new URLSearchParams(location.hash.slice(1)).get("token");
 const incomingCode = new URLSearchParams(location.hash.slice(1)).get("code");
@@ -573,6 +571,14 @@ async function connectWifi() {
     `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`,
   );
   ws = socket;
+  let failure = "";
+  const connectTimeout = setTimeout(() => {
+    if (ws !== socket || transport === "wifi") return;
+    failure = "Laptop did not respond. Keep PocketPad running and scan its current controller QR.";
+    openConnect();
+    $("connectError").textContent = failure;
+    socket.close();
+  }, 8000);
   socket.onopen = () => socket.send(JSON.stringify({ token: pairingToken }));
   socket.onmessage = (e) => {
     let data;
@@ -582,14 +588,19 @@ async function connectWifi() {
       return;
     }
     if (data.type === "ready") {
+      clearTimeout(connectTimeout);
       transport = "wifi";
       status(true, "Connected · Wi-Fi");
+      toast("Connected to your laptop. Tap a button to test.");
       $("connectDialog").close();
       wake();
       sendState();
     } else if (data.type === "error") {
+      clearTimeout(connectTimeout);
+      failure = data.message;
       shouldReconnect = false;
       toast(data.message);
+      openConnect();
       $("connectError").textContent = data.message;
       socket.close();
     } else if (data.type === "pong")
@@ -603,14 +614,18 @@ async function connectWifi() {
       );
   };
   socket.onerror = () => {
+    failure = "Cannot reach your laptop. Keep PocketPad running, check both devices’ Wi-Fi, then scan the controller QR again.";
+    openConnect();
+    $("connectError").textContent = failure;
     status(false, "Connection unavailable");
   };
   socket.onclose = () => {
+    clearTimeout(connectTimeout);
     if (ws !== socket) return;
     ws = null;
     transport = null;
     releaseAll();
-    status(false, "Disconnected");
+    status(false, failure ? "Connection failed · tap Connect" : "Disconnected · reconnecting…");
     if (shouldReconnect && !document.hidden)
       retryTimer = setTimeout(connectWifi, 1800);
   };
