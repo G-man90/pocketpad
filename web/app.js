@@ -9,7 +9,7 @@ import {
   validatePairLink,
 } from "./model.js";
 import { normalizeCode, codeLink, localCompanion } from "./pairing.js";
-import { fetchWithTimeout } from "./connection.js";
+import { fetchWithTimeout, completeCodePair } from "./connection.js";
 const $ = (id) => document.getElementById(id),
   controls = $("controls"),
   stage = $("stage");
@@ -485,7 +485,16 @@ async function requestCodePair(value) {
       if (result.status === 202) continue;
       if (result.ok) {
         const approved = await result.json();
-        location.replace(validatePairLink(approved.url));
+        completeCodePair(approved.url, {
+          origin: location.origin,
+          connect: (token) => {
+            disconnect();
+            rememberPairingToken(token);
+            $("pairStatus").textContent = "Approved. Connecting to your laptop…";
+            connectWifi();
+          },
+          navigate: (url) => location.replace(url),
+        });
         return;
       }
       throw Error(
@@ -552,16 +561,32 @@ function status(connected, label) {
 }
 let pairingToken = new URLSearchParams(location.hash.slice(1)).get("token");
 const incomingCode = new URLSearchParams(location.hash.slice(1)).get("code");
-if (pairingToken && /^[a-f0-9]{32}$/.test(pairingToken)) {
+function rememberPairingToken(token) {
+  pairingToken = token;
   try {
     sessionStorage.setItem("pocketpad.token", pairingToken);
   } catch {}
   history.replaceState(null, "", location.pathname + location.search);
   $("bluetoothToken").value = pairingToken;
-} else
+}
+if (pairingToken && /^[a-f0-9]{32}$/.test(pairingToken)) rememberPairingToken(pairingToken);
+else
   try {
     pairingToken = sessionStorage.getItem("pocketpad.token");
   } catch {}
+window.addEventListener("hashchange", () => {
+  if (!localCompanion(location)) return;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const token = params.get("token");
+  if (token && /^[a-f0-9]{32}$/.test(token)) {
+    disconnect();
+    rememberPairingToken(token);
+    connectWifi();
+  } else if (params.get("code")) {
+    openConnect();
+    requestCodePair(params.get("code"));
+  }
+});
 async function connectWifi() {
   if (ws && [WebSocket.OPEN, WebSocket.CONNECTING].includes(ws.readyState))
     return;

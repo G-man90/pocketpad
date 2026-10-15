@@ -1,6 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchWithTimeout, connectionSummary } from "../web/connection.js";
+import { fetchWithTimeout, connectionSummary, completeCodePair } from "../web/connection.js";
+
+test("same-laptop approval starts controller without a fragment-only redirect", () => {
+  const token = "a".repeat(32);
+  let connectedToken;
+  completeCodePair(`http://192.168.1.2:3210/#token=${token}`, {
+    origin: "http://192.168.1.2:3210",
+    connect: value => { connectedToken = value; },
+    navigate: () => assert.fail("Fragment navigation would leave the controller disconnected"),
+  });
+  assert.equal(connectedToken, token);
+});
+
+test("discovery-host approval navigates to the validated laptop endpoint", () => {
+  const url = `http://192.168.1.2:3210/#token=${"a".repeat(32)}`;
+  let destination;
+  completeCodePair(url, {
+    origin: "http://pocketpad-abcde.local:3210",
+    connect: () => assert.fail("Discovery host should hand off to the stable IP"),
+    navigate: value => { destination = value; },
+  });
+  assert.equal(destination, url);
+});
 
 test("approval is never presented as an active connection", () => {
   const data = { ready: true, connected: false, pairing: { stage: "approved", at: new Date().toISOString() } };

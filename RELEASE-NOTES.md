@@ -1,5 +1,6 @@
 PocketPad 0.2.1 beta makes connection progress visible.
 
+- Fixes code approval leaving the controller disconnected when the approved link only changes the current page's fragment. New QR tokens also reconnect an already-open controller page.
 - The laptop distinguishes a pairing request, approval, the device collecting approval, and an active controller connection.
 - A controller tester shows the last button or stick movement actually received by Windows, including brief taps.
 - Network permission messages explain that allowing access does not itself pair a device.

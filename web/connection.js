@@ -1,3 +1,12 @@
+import { validatePairLink } from "./model.js";
+
+// A same-page fragment navigation does not rerun the controller startup code.
+export function completeCodePair(value, { origin, connect, navigate }) {
+  const url = new URL(validatePairLink(value));
+  if (url.origin === origin) connect(new URLSearchParams(url.hash.slice(1)).get("token"));
+  else navigate(url.href);
+}
+
 // AbortSignal.timeout is unavailable in older iPad browsers.
 export async function fetchWithTimeout(url, options = {}, timeout = 5000) {
   const controller = new AbortController();
