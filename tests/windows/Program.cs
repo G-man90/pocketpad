@@ -26,6 +26,8 @@ using(var ws=await Connect(token)){
  vibration=default;Native.XInputSetState(slot,ref vibration);
  heartbeatStop.Cancel();await heartbeat;
  await Task.Delay(750);Native.XInputGetState(slot,out var neutral);Check(neutral.Gamepad.Buttons==0&&neutral.Gamepad.LeftTrigger==0&&neutral.Gamepad.ThumbLX==0,"stalled sender releases all controls within watchdog window");
+ await ws.SendAsync(packet,WebSocketMessageType.Binary,true,CancellationToken.None);
+ await Task.Delay(80);Native.XInputGetState(slot,out var resumed);Check(resumed.Gamepad.Buttons==0x1101&&resumed.Gamepad.ThumbLX==16384,"brief input pause resumes on the same connection without re-pairing");
  ws.Abort();
 }
 await Task.Delay(150);

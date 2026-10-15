@@ -1,6 +1,8 @@
 PocketPad 0.2.1 beta makes connection progress visible.
 
 - Fixes code approval leaving the controller disconnected when the approved link only changes the current page's fragment. New QR tokens also reconnect an already-open controller page.
+- Keeps the Wi-Fi session through short input pauses while still releasing held controls after 500 ms. A separate socket timeout handles lost connections.
+- Adds an Edit layout / Done editing button beside the controller, available in fullscreen. Drag controls or use position and size sliders directly below the pad.
 - The laptop distinguishes a pairing request, approval, the device collecting approval, and an active controller connection.
 - A controller tester shows the last button or stick movement actually received by Windows, including brief taps.
 - Network permission messages explain that allowing access does not itself pair a device.
@@ -9,7 +11,7 @@ PocketPad 0.2.1 beta makes connection progress visible.
 
 **Upgrade:** close your old companion, extract this ZIP, and run PocketPad.exe. Scan the controller QR with your iPad camera and open it in Safari. Keep the controller page visible. The laptop's tester confirms received controls.
 
-**Validation:** automated pairing, timeout, authorization, and Windows controller tests. An actual iPad connection remains to be verified with the user; this release does not claim that the reported network problem is resolved.
+**Validation:** automated pairing, timeout, authorization, and Windows controller tests. Real iPad controls reached this laptop and the user confirmed them. The subsequent stability and editor changes still require a fresh iPad check.
 
 Five-letter codes still require local network discovery. Scan the controller QR if discovery is blocked. Some networks block all device-to-device traffic. Offline Wi-Fi creation and physical Bluetooth pairing remain unverified on this laptop; Windows previously rejected Wi-Fi Direct startup and Bluetooth advertising has been intermittent.
 

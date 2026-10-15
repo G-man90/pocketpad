@@ -83,7 +83,9 @@ async function refresh() {
       ? `${controller.lastAction} ✓ · ${new Date(controller.lastActionAt).toLocaleTimeString()}`
       : "Tap A / Cross or move a stick on your device.";
     $("inputTest").classList.toggle("received", !!controller?.lastActionAt);
-    $("inputCount").textContent = data.connected && controller?.packets > 0
+    $("inputCount").textContent = data.connected && controller?.inputPaused
+      ? "Brief pause · held buttons released for safety"
+      : data.connected && controller?.packets > 0
       ? "Live connection · controls are reaching Windows"
       : "Waiting for a live controller connection";
     $("driverStatus").textContent = data.driver;

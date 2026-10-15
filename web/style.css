@@ -1234,6 +1234,27 @@ summary {
   letter-spacing: 0.2em;
   font-size: 22px;
 }
+.layout-editor {
+  display: grid;
+  grid-template-columns: minmax(95px, 0.6fr) minmax(0, 1.4fr);
+  gap: 8px 14px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+  background: #19221b;
+}
+.layout-editor .field-label, .layout-editor .range-label {
+  margin: 0;
+  align-self: center;
+}
+.layout-editor select, .layout-editor input { min-width: 0; margin: 0; }
+.layout-editor input { min-height: 36px; }
+.layout-editor > .divider { display: none; }
+.layout-help { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 1.6; margin: 4px 0 0; }
+#editLayout { white-space: nowrap; min-height: 36px; color: var(--lime); }
+.editing-page .controller-panel { height: auto; overflow: visible; }
+.editing-page .controller-panel .stage { flex-shrink: 0; }
+.editing-page .controller-panel:fullscreen { height: 100dvh; overflow-y: auto; }
 #pairStatus {
   color: var(--lime);
   font-size: 12px;

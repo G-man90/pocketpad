@@ -138,6 +138,7 @@ function selectControl(id) {
   $("selectedControl").value = id;
   $("controlSize").value = c.size;
   $("sizeValue").value = c.size + "%";
+  updatePositionValues(c);
   $("mapping").disabled = c.kind === "stick";
   $("mapping").value = c.action in ACTIONS ? c.action : "a";
 }
@@ -202,6 +203,7 @@ function render() {
         c.x = touch.x + ((e.clientX - touch.startX) / r.width) * 100;
         c.y = touch.y + ((e.clientY - touch.startY) / r.height) * 100;
         position(c, el);
+        updatePositionValues(c);
       } else if (c.kind === "stick") {
         moveStick(c, el, e);
         sendState();
@@ -321,6 +323,11 @@ function setMode(value) {
   $("playTab").setAttribute("aria-pressed", !edit);
   $("editTab").setAttribute("aria-pressed", edit);
   $("editorSettings").hidden = !edit;
+  $("editLayout").textContent = edit ? "Done editing" : "Edit layout";
+  $("editLayout").setAttribute("aria-pressed", edit);
+  $("stageHint").textContent = edit
+    ? "Drag controls to move · select one to resize"
+    : transport ? "Windows output · Xbox-compatible controller" : "Try the controls · Connect to play on Windows";
   $("editTip").hidden = !edit;
   $("settingsHeading").textContent = edit
     ? "Find your fit."
@@ -332,6 +339,24 @@ $("mapping").append(
 );
 $("playTab").onclick = () => setMode(false);
 $("editTab").onclick = () => setMode(true);
+$("editLayout").onclick = () => setMode(!edit);
+// Keep the editor with the controller, including in fullscreen and on tablets.
+$("stage").insertAdjacentElement("afterend", $("editorSettings"));
+function updatePositionValues(c) {
+  $("controlX").value = Math.round(c.x);
+  $("controlY").value = Math.round(c.y);
+  $("xValue").value = Math.round(c.x) + "%";
+  $("yValue").value = Math.round(c.y) + "%";
+}
+for (const [id, axis] of [["controlX", "x"], ["controlY", "y"]]) {
+  $(id).oninput = (e) => {
+    const c = layout.controls.find(c => c.id === selected);
+    c[axis] = Number(e.target.value);
+    position(c, controls.querySelector(`[data-id="${selected}"]`));
+    updatePositionValues(c);
+    persist();
+  };
+}
 document.querySelectorAll("[data-pad]").forEach(
   (el) =>
     (el.onclick = () => {
@@ -347,6 +372,7 @@ $("controlSize").oninput = (e) => {
   const c = layout.controls.find((c) => c.id === selected);
   c.size = +e.target.value;
   position(c, controls.querySelector(`[data-id="${selected}"]`));
+  updatePositionValues(c);
   $("sizeValue").value = c.size + "%";
   persist();
 };

@@ -12,6 +12,7 @@ public sealed class GamepadBridge : IDisposable
     IXbox360Controller? pad;
     string? owner;
     long lastInput;
+    bool inputPaused;
     long packets;
     long actions;
     string? peer;
@@ -19,7 +20,7 @@ public sealed class GamepadBridge : IDisposable
     DateTimeOffset? lastActionAt;
     string lastAction = "No buttons received yet";
     string connectionNote = "Waiting for a controller";
-    public object Snapshot() { lock(gate) return new { connected = owner != null, peer, connectedAt, packets, actions, lastAction, lastActionAt, note = connectionNote }; }
+    public object Snapshot() { lock(gate) return new { connected = owner != null, inputPaused, peer, connectedAt, packets, actions, lastAction, lastActionAt, note = connectionNote }; }
     readonly Timer watchdog;
     public string Token { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
     public string Status { get; private set; } = "Starting";
@@ -36,7 +37,15 @@ public sealed class GamepadBridge : IDisposable
             Status = "Xbox controller ready";
         }
         catch(Exception ex) { pad = null; Status = "Gamepad driver unavailable: " + ex.GetType().Name; }
-        watchdog = new Timer(_ => { lock(gate) { if(owner != null && Environment.TickCount64 - lastInput > 500) { Neutral(); owner = null; connectionNote = "Input stopped. Keep the controller page open and the screen awake."; } } }, null, 100, 100);
+        watchdog = new Timer(_ => { lock(gate) {
+            if(owner != null && !inputPaused && Environment.TickCount64 - lastInput > 500) {
+                Neutral(); inputPaused=true;
+                connectionNote="Input paused; held controls released. Waiting for your device to resume.";
+                // Keep the Wi-Fi session through brief Safari/network stalls. The socket
+                // owns its separate idle timeout; safety does not require re-pairing.
+                if(!owner.StartsWith("wifi:")) owner=null;
+            }
+        } }, null, 100, 100);
     }
     public bool Authorized(string? token) => token != null && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(token), Encoding.UTF8.GetBytes(Token));
     public bool Claim(string id, string? token, string? address = null)
@@ -44,7 +53,7 @@ public sealed class GamepadBridge : IDisposable
         lock(gate)
         {
             if(!Ready || !Authorized(token) || (owner != null && owner != id)) return false;
-            owner=id; peer=address ?? "Bluetooth"; connectedAt=DateTimeOffset.UtcNow; packets=0; actions=0; lastActionAt=null; lastAction="No buttons received yet"; connectionNote="Connected. Tap a button on your controller to test."; lastInput=Environment.TickCount64; return true;
+            owner=id; inputPaused=false; peer=address ?? "Bluetooth"; connectedAt=DateTimeOffset.UtcNow; packets=0; actions=0; lastActionAt=null; lastAction="No buttons received yet"; connectionNote="Connected. Tap a button on your controller to test."; lastInput=Environment.TickCount64; return true;
         }
     }
     public bool Submit(string id, ReadOnlySpan<byte> data)
@@ -59,7 +68,7 @@ public sealed class GamepadBridge : IDisposable
             pad.SetAxisValue(Xbox360Axis.LeftThumbY, BinaryPrimitives.ReadInt16LittleEndian(data[8..]));
             pad.SetAxisValue(Xbox360Axis.RightThumbX, BinaryPrimitives.ReadInt16LittleEndian(data[10..]));
             pad.SetAxisValue(Xbox360Axis.RightThumbY, BinaryPrimitives.ReadInt16LittleEndian(data[12..]));
-            pad.SubmitReport(); lastInput=Environment.TickCount64; packets++;
+            pad.SubmitReport(); lastInput=Environment.TickCount64; inputPaused=false; connectionNote="Connected. Tap a button on your controller to test."; packets++;
             var buttons = BinaryPrimitives.ReadUInt16LittleEndian(data[2..]);
             var labels = new List<string>();
             foreach(var (mask, label) in new (int, string)[] { (1,"Up"),(2,"Down"),(4,"Left"),(8,"Right"),(16,"Start / Options"),(32,"Back / Share"),(64,"L3"),(128,"R3"),(256,"LB / L1"),(512,"RB / R1"),(4096,"A / Cross"),(8192,"B / Circle"),(16384,"X / Square"),(32768,"Y / Triangle") })

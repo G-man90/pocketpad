@@ -21,6 +21,7 @@ export async function fetchWithTimeout(url, options = {}, timeout = 5000) {
 export function connectionSummary(data) {
   const controller = data.controller;
   if (!data.ready) return "Install the gamepad driver, then restart PocketPad.";
+  if (data.connected && controller?.inputPaused) return controller.note;
   if (data.connected) return controller?.packets > 0
     ? `Receiving controls from ${controller.peer}. Tap a button to test below.`
     : "Device connected. Waiting for its first controls…";

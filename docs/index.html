@@ -14,7 +14,7 @@
     <title>PocketPad — Your next controller is already in your pocket.</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="style.css?v=20892bd26e8b" />
+    <link rel="stylesheet" href="style.css?v=9abe7034c3b5" />
   </head>
   <body>
     <header class="topbar">
@@ -103,6 +103,7 @@
               ><span id="connectionStatus">Preview mode</span></span
             ><span class="panel-top-right"
               ><span id="latency">NOT CONNECTED</span
+              ><button id="editLayout" class="text-button" aria-pressed="false">Edit layout</button
               ><button
                 id="fullscreen"
                 class="icon-button"
@@ -145,7 +146,7 @@
         <aside class="sidebar settings-sidebar">
           <div class="section-label">02 / MAKE IT YOURS</div>
           <h2 id="settingsHeading">Feels like you.</h2>
-          <div id="editorSettings" hidden>
+          <div id="editorSettings" class="layout-editor" hidden>
             <label class="field-label" for="selectedControl"
               >Selected control</label
             ><select id="selectedControl"></select
@@ -159,6 +160,11 @@
               value="100"
             /><label class="field-label" for="mapping">Button action</label
             ><select id="mapping"></select>
+            <label class="range-label" for="controlX">Left / right <output id="xValue"></output></label>
+            <input id="controlX" type="range" min="0" max="100" step="1" />
+            <label class="range-label" for="controlY">Up / down <output id="yValue"></output></label>
+            <input id="controlY" type="range" min="0" max="100" step="1" />
+            <p class="layout-help">Drag any button or stick to move it. Use these sliders to fine-tune. Changes save on this device.</p>
             <div class="divider"></div>
           </div>
           <label class="range-label" for="opacity"
@@ -375,6 +381,6 @@
       </form>
     </dialog>
     <div id="toast" class="toast" role="status" hidden></div>
-    <script type="module" src="app.js?v=ee1251677267"></script>
+    <script type="module" src="app.js?v=b646ccfec4d1"></script>
   </body>
 </html>
